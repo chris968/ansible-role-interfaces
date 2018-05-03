@@ -61,7 +61,9 @@ def _interface_check(context, interface, interface_type=None):
         if interface_type:
             fact_type = fact["type"]
             if interface_type != fact_type:
-                return _fail("Interface %s is of an unexpected type" % device)
+                return _fail("Interface %s is of an unexpected type: expected "
+                             "%s, actual %s" %
+                             (device, interface_type, fact_type))
 
     # Static IPv4 address
     if interface.get("bootproto") == "static" and interface.get("address"):
@@ -79,12 +81,16 @@ def _interface_check(context, interface, interface_type=None):
                             fact_address = address_dict['address']
                             break
             if fact_address != interface["address"]:
-                return _fail("Interface %s has incorrect IPv4 address" % device)
+                return _fail("Interface %s has incorrect IPv4 address: "
+                             "expected %s, actual %s" %
+                             (device, interface["address"], fact_address))
 
             # Netmask
             if (interface.get("netmask") and
                     fact["ipv4"]["netmask"] != interface["netmask"]):
-                return _fail("Interface %s has incorrect IPv4 netmask" % device)
+                return _fail("Interface %s has incorrect IPv4 netmask: "
+                             "expected %s, actual %s" %
+                             (device, interface["netmask"], fact["ipv4"]["netmask"]))
 
             # Gateway
             if interface.get("gateway"):
@@ -92,7 +98,9 @@ def _interface_check(context, interface, interface_type=None):
                 if not fact_gateway:
                     return _fail("Default gateway is missing")
                 if interface["gateway"] != fact_gateway:
-                    return _fail("Default gateway is incorrect")
+                    return _fail("Default gateway is incorrect: expected %s, "
+                                 "actual %s" %
+                                 (interface["gateway"], fact_gateway))
 
         elif fact_address:
             return _fail("Interface %s has an IPv4 address but none was "
@@ -102,7 +110,8 @@ def _interface_check(context, interface, interface_type=None):
     if interface.get("mtu"):
         fact_mtu = fact.get("mtu")
         if interface["mtu"] != fact_mtu:
-            return _fail("Interface %s has incorrect MTU" % device)
+            return _fail("Interface %s has incorrect MTU: expected %s, actual "
+                         "%s" % (device, interface["mtu"], fact_mtu))
 
     return _pass()
 
@@ -181,13 +190,17 @@ def bond_check(context, interface):
         interface_mode = str(interface["bond_mode"])
         interface_mode = mode_lookup.get(interface_mode, interface_mode)
         if interface_mode != fact["mode"]:
-            return _fail("Bond interface %s has incorrect bond mode" % device)
+            return _fail("Bond interface %s has incorrect bond mode: expected "
+                         "%s, actual %s" %
+                         (device, interface_mode, fact["mode"]))
 
     # Bond miimon
     if interface.get("bond_miimon"):
         fact_miimon = fact["miimon"]
         if str(interface["bond_miimon"]) != fact["miimon"]:
-            return _fail("Bond interface %s has incorrect miimon" % device)
+            return _fail("Bond interface %s has incorrect miimon: expected "
+                         "%s, actual %s" %
+                         (device, str(interface["bond_miimon"]), fact["miimon"]))
 
     # Bond slaves
     fact_slaves = fact.get("slaves", [])
